@@ -166,13 +166,29 @@ public class LinkedList<T> {
         return remove(size - 1);
     }
 
+    public void removeElement(T temp){
+        Node prev = dummyHead;
+        while (prev.next != null){
+            if (prev.next.element.equals(temp)){
+                break;
+            }
+            prev = prev.next;
+        }
+
+        if (prev.next != null){
+            Node delNode = prev.next;
+            prev.next = delNode.next;
+            delNode.next = null;
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append("LinkedList: size = ").append(size).append('\n');
 
         for (Node cur = dummyHead.next; cur != null ; cur = cur.next) {
-            result.append(cur + " -> ");
+            result.append(cur).append(" -> ");
         }
 
         result.append("NULL");
