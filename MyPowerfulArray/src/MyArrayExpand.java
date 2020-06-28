@@ -20,6 +20,12 @@ public class MyArrayExpand<T> {
         size = 0;
     }
 
+    public MyArrayExpand(T[] array){
+        data = (T[])new Object[array.length];
+        System.arraycopy(array, 0, data, 0, array.length);
+        size = array.length;
+    }
+
     /**
      * 获取数组中的元素个数
      */
@@ -164,9 +170,11 @@ public class MyArrayExpand<T> {
         }
 
         T ret = data[index];
-        System.arraycopy(data, index + 1, data, index, size - index);
+        if (index != size - 1){
+            System.arraycopy(data, index + 1, data, index, size - index);
+        }
+        data[index] = null;
         size --;
-        data[size] = null;
 
         if (size == data.length / 4 && data.length / 2 != 0){
             resize(data.length / 2);
@@ -216,5 +224,18 @@ public class MyArrayExpand<T> {
         T[] newData = (T[])new Object[newCapacity];
         System.arraycopy(data, 0, newData, 0, size);
         data = newData;
+    }
+
+    /**
+     * 交换两个位置的值
+     */
+    public void swap(int indexA, int indexB){
+        if (indexA < 0 || indexB >= size || indexB < 0 || indexB >= size){
+            throw new IllegalArgumentException("Index is illegal");
+        }
+
+        T temp = data[indexA];
+        data[indexA] = data[indexB];
+        data[indexB] = temp;
     }
 }
