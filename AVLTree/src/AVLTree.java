@@ -44,8 +44,8 @@ public class AVLTree<K extends Comparable<K>, V> {
         ArrayList<K> keys = new ArrayList<>();
         inOrder(root, keys);
 
-        for (int i = 0; i < keys.size(); i++) {
-            if (keys.get(i + 1).compareTo(keys.get(i)) > 0){
+        for (int i = 1; i < keys.size(); i++) {
+            if (keys.get(i - 1).compareTo(keys.get(i)) > 0){
                 return false;
             }
         }
@@ -92,6 +92,32 @@ public class AVLTree<K extends Comparable<K>, V> {
         return getHeight(node.left) - getHeight(node.right);
     }
 
+    private Node rightRotate(Node node){
+        Node left = node.left;
+        Node right = left.right;
+
+        left.right = node;
+        node.left = right;
+
+        node.height = Math.max(getHeight(node.left), getHeight(node.right)) + 1;
+        left.height = Math.max(getHeight(left.left), getHeight(left.right)) + 1;
+
+        return left;
+    }
+
+    private Node leftRotate(Node node){
+        Node right = node.right;
+        Node left = right.left;
+
+        right.left = node;
+        node.right = left;
+
+        node.height = Math.max(getHeight(node.left), getHeight(node.right)) + 1;
+        right.height = Math.max(getHeight(right.left), getHeight(right.right)) + 1;
+
+        return right;
+    }
+
     private Node add(Node node, K key, V value){
         if (node == null){
             size ++;
@@ -108,14 +134,7 @@ public class AVLTree<K extends Comparable<K>, V> {
             node.value = value;
         }
 
-        node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right));
-
-        int balanceFactor = getBalanceFactor(node);
-        if (Math.abs(balanceFactor) > 1){
-            System.out.println("unbalanced: " + balanceFactor);
-        }
-
-        return node;
+        return maintainHeight(node);
     }
 
     public void add(K key, V value){
@@ -164,18 +183,6 @@ public class AVLTree<K extends Comparable<K>, V> {
         return minimum(node.left);
     }
 
-    private Node removeMin(Node node) {
-        if (node.left == null){
-            Node rightNode = node.right;
-            node.right = null;
-            size --;
-            return rightNode;
-        }
-
-        node.left = removeMin(node.left);
-        return node;
-    }
-
     public V remove(K key){
         Node node = getNode(root, key);
         if (node != null) {
@@ -190,35 +197,63 @@ public class AVLTree<K extends Comparable<K>, V> {
             return null;
         }
 
+        Node retNode;
         if (key.compareTo(node.key) < 0){
             node.left = remove(node.left, key);
-            return node;
+            retNode = node;
         }
         else if (key.compareTo(node.key) > 0){
             node.right = remove(node.right, key);
-            return node;
+            retNode = node;
         }
         else {
             if (node.left == null){
                 Node rightNode = node.right;
                 node.right = null;
                 size --;
-                return rightNode;
+                retNode = rightNode;
             }
-
-            if (node.right == null){
+            else if (node.right == null){
                 Node leftNode = node.left;
                 node.left = null;
                 size --;
-                return leftNode;
+                retNode = leftNode;
             }
+            else {
+                Node successor = minimum(node.right);
+                successor.right = remove(node.right, successor.key);
+                successor.left = node.left;
 
-            Node successor = minimum(node.right);
-            successor.right = removeMin(node.right);
-            successor.left = node.left;
-
-            node.left = node.right = null;
-            return successor;
+                node.left = node.right = null;
+                retNode = successor;
+            }
         }
+
+        if (retNode == null){
+            return null;
+        }
+
+        return maintainHeight(retNode);
+    }
+
+    private Node maintainHeight(Node node) {
+        node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right));
+
+        int balanceFactor = getBalanceFactor(node);
+
+        if (balanceFactor > 1){
+            if (getBalanceFactor(node.left) < 0){
+                node.left = leftRotate(node.left);
+            }
+            return rightRotate(node);
+        }
+        else if (balanceFactor < -1){
+            if (getBalanceFactor(node.right) > 0){
+                node.right = rightRotate(node.right);
+            }
+            return leftRotate(node);
+        }
+
+        return node;
     }
 }
